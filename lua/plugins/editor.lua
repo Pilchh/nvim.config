@@ -77,6 +77,7 @@ return {
 		priority = 1000,
 		config = function()
 			require("vague").setup({
+				transparent = true,
 				plugins = {
 					telescope = {
 						match = "bold",

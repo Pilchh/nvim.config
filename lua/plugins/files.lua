@@ -111,4 +111,9 @@ return {
 			end, { desc = "[S]earch [N]eovim files" })
 		end,
 	},
+	{
+		"ThePrimeagen/harpoon",
+		branch = "harpoon2",
+		dependencies = { "nvim-lua/plenary.nvim" },
+	},
 }
