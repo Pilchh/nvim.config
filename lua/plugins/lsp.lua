@@ -107,11 +107,22 @@ return {
 								return items
 							end
 
+							-- Get text before cursor
+							local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+							local line = vim.api.nvim_buf_get_lines(ctx.bufnr, row - 1, row, false)[1]
+							local before_cursor = line:sub(1, col)
+
+							-- If we're inside a struct literal body, do NOT filter anything
+							-- e.g. `MyStruct { field|`
+							if before_cursor:match("{[^}]*$") then
+								return items
+							end
+
+							-- Otherwise, filter top-level struct literal completions
 							return vim.tbl_filter(function(item)
 								local text = item.insertText or (item.textEdit and item.textEdit.newText) or item.label
 
-								-- Hide ONLY struct literals: `TypeName { ... }`
-								-- Starts with UpperCamelCase + `{`
+								-- Hide only `TypeName { ... }`
 								if text and text:match("^%u[%w_]*%s*{") then
 									return false
 								end
