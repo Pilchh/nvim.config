@@ -98,9 +98,31 @@ return {
 			},
 
 			sources = {
-				default = { "lsp", "path", "snippets", "lazydev" },
+				default = { "lsp", "path", "lazydev" },
 				providers = {
 					lazydev = { module = "lazydev.integrations.blink", score_offset = 100 },
+					lsp = {
+						transform_items = function(ctx, items)
+							if not ctx.bufnr or vim.bo[ctx.bufnr].filetype ~= "rust" then
+								return items
+							end
+
+							return vim.tbl_filter(function(item)
+								-- rust-analyzer struct literal completions insert `{`
+								local text = item.insertText or (item.textEdit and item.textEdit.newText) or item.label
+
+								-- Match `Type { ... }`
+								if text and text:find("{", 1, true) then
+									-- Extra guard: avoid filtering methods that might include `{`
+									if item.label and item.label:match("^%w+") then
+										return false
+									end
+								end
+
+								return true
+							end, items)
+						end,
+					},
 				},
 			},
 
@@ -284,48 +306,40 @@ return {
 				},
 			})
 
-			local capabilities = require("blink.cmp").get_lsp_capabilities()
+			local capabilities = require("blink.cmp").get_lsp_capabilities({
+				-- textDocument = { completion = { completionItem = { snippetSupport = false } } },
+			})
 
-			-- Enable the following language servers
-			--  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
-			--
-			--  Add any additional override configuration in the following tables. Available keys are:
-			--  - cmd (table): Override the default command used to start the server
-			--  - filetypes (table): Override the default list of associated filetypes for the server
-			--  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
-			--  - settings (table): Override the default settings passed when initializing the server.
-			--        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
 			local servers = {
-				-- clangd = {},
-				-- gopls = {},
-				-- pyright = {},
 				rust_analyzer = {
-					filetypes = { "rust" },
+					capabilities = capabilities,
+					settings = {
+						["rust-analyzer"] = {
+							completion = {
+								-- fullFunctionSignatures = false,
+								-- postfix = { enable = false },
+								autoimport = { enable = true },
+								callable = {
+									snippets = "add_parentheses",
+								},
+							},
+						},
+					},
 				},
-				-- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-				--
-				-- Some languages (like typescript) have entire language plugins that can be useful:
-				--    https://github.com/pmizio/typescript-tools.nvim
-				--
-				-- But for many setups, the LSP (`ts_ls`) will work just fine
-				-- ts_ls = {},
-				--
 
 				lua_ls = {
-					-- cmd = { ... },
-					-- filetypes = { ... },
-					-- capabilities = {},
+					capabilities = capabilities,
 					settings = {
 						Lua = {
 							completion = {
 								callSnippet = "Replace",
 							},
-							-- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-							-- diagnostics = { disable = { 'missing-fields' } },
 						},
 					},
 				},
+
 				clangd = {
+					capabilities = capabilities,
 					completion = {
 						callSnippet = "Disable",
 						keywordSnippet = "Disable",
@@ -333,26 +347,13 @@ return {
 				},
 			}
 
-			local ensure_installed = vim.tbl_keys(servers or {})
-			vim.list_extend(ensure_installed, {
-				"stylua", -- Used to format Lua code
-			})
-			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
+			for name, config in pairs(servers) do
+				vim.lsp.enable(name)
 
-			require("mason-lspconfig").setup({
-				ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-				automatic_installation = false,
-				handlers = {
-					function(server_name)
-						local server = servers[server_name] or {}
-						-- This handles overriding only values explicitly passed
-						-- by the server configuration above. Useful when disabling
-						-- certain features of an LSP (for example, turning off formatting for ts_ls)
-						server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
-						require("lspconfig")[server_name].setup(server)
-					end,
-				},
-			})
+				if config then
+					vim.lsp.config(name, config)
+				end
+			end
 		end,
 	},
 }
