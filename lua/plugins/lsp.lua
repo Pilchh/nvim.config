@@ -108,15 +108,12 @@ return {
 							end
 
 							return vim.tbl_filter(function(item)
-								-- rust-analyzer struct literal completions insert `{`
 								local text = item.insertText or (item.textEdit and item.textEdit.newText) or item.label
 
-								-- Match `Type { ... }`
-								if text and text:find("{", 1, true) then
-									-- Extra guard: avoid filtering methods that might include `{`
-									if item.label and item.label:match("^%w+") then
-										return false
-									end
+								-- Hide ONLY struct literals: `TypeName { ... }`
+								-- Starts with UpperCamelCase + `{`
+								if text and text:match("^%u[%w_]*%s*{") then
+									return false
 								end
 
 								return true
