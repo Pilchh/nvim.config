@@ -2,10 +2,10 @@
 --  Options
 --
 
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
-vim.g.have_nerd_font = true
-vim.o.termguicolors = true
+vim.g.mapleader = " " -- set leader to space
+vim.g.maplocalleader = " " -- set leader to space
+vim.g.have_nerd_font = true -- set nerd font
+vim.o.termguicolors = true -- set colours
 
 vim.opt.number = true -- line number
 vim.opt.relativenumber = true -- relative line numbers
@@ -88,13 +88,13 @@ vim.opt.maxmempattern = 20000 -- increase max memory
 -- Basic Keymaps
 --
 
-vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
-vim.keymap.set("n", "<C-u>", "<C-u>zz", { noremap = true })
-vim.keymap.set("n", "<C-d>", "<C-d>zz", { noremap = true })
-vim.keymap.set("n", "n", "nzzzv", { noremap = true })
-vim.keymap.set("n", "N", "Nzzzv", { noremap = true })
-vim.keymap.set("n", "<C-h>", "<cmd>bp<cr>")
-vim.keymap.set("n", "<C-l>", "<cmd>bn<cr>")
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear highlight" })
+vim.keymap.set("n", "<C-u>", "<C-u>zz", { noremap = true }, { desc = "Move up half page and centre" })
+vim.keymap.set("n", "<C-d>", "<C-d>zz", { noremap = true }, { desc = "Move down half page and centre" })
+vim.keymap.set("n", "n", "nzzzv", { noremap = true }, { desc = "Go to next search and centre" })
+vim.keymap.set("n", "N", "Nzzzv", { noremap = true }, { desc = "Go to previous search and centre" })
+vim.keymap.set("n", "<C-h>", "<cmd>bp<cr>", { desc = "Go to next buffer" })
+vim.keymap.set("n", "<C-l>", "<cmd>bn<cr>", { desc = "Go to previous buffer" })
 vim.keymap.set("x", "<leader>p", '"_dP', { desc = "Paste without yanking" })
 vim.keymap.set({ "n", "v" }, "<leader>x", '"_d', { desc = "Delete without yanking" })
 
