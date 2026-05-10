@@ -297,7 +297,11 @@ require("mini.icons").setup()
 require("mini.tabline").setup()
 require("mini.surround").setup()
 require("mini.statusline").setup()
-require("mini.files").setup()
+require("mini.files").setup({
+    windows = {
+        preview = true
+    }
+})
 
 vim.keymap.set("n", "<leader>e", MiniFiles.open)
 
