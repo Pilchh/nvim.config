@@ -29,7 +29,7 @@ vim.opt.incsearch = true -- show matches as you type
 vim.opt.signcolumn = "yes" -- always show a sign column
 vim.opt.showmatch = true -- highlights matching brackets
 vim.opt.cmdheight = 1 -- single line command line
-vim.opt.completeopt = "menuone,noinsert,noselect" -- completion options
+vim.opt.completeopt = "menu,menuone,noinsert" -- completion options
 vim.opt.showmode = false -- do not show the mode, instead have it in statusline
 vim.opt.pumheight = 10 -- popup menu height
 vim.opt.pumblend = 10 -- popup menu transparency
@@ -141,6 +141,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 		"*.cpp",
 		"*.h",
 		"*.hpp",
+        "*.rs"
 	},
 	callback = function(args)
 		-- avoid formatting non-file buffers (helps prevent weird write prompts)
@@ -211,7 +212,8 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 vim.pack.add({
 	{ src = "https://github.com/vague-theme/vague.nvim" },
     { src = "https://www.github.com/lewis6991/gitsigns.nvim" },
-	{ src = "https://github.com/neovim/nvim-lspconfig" },
+	{ src = "https://github.com/L3MON4D3/LuaSnip" },
+    { src = "https://github.com/neovim/nvim-lspconfig" },
     { src = "https://github.com/creativenull/efmls-configs-nvim" },
 	{
 		src = "https://github.com/nvim-treesitter/nvim-treesitter",
@@ -234,7 +236,35 @@ vim.cmd.colorscheme('vague')
 require("mason").setup()
 require("mason-lspconfig").setup()
 require("fidget").setup()
-require("fzf-lua").setup({})
+
+-- Add transparent background to floats
+vim.api.nvim_set_hl(0, "FzfLuaBorder", {
+    fg = "#878787",
+    bg = "NONE",
+})
+
+vim.api.nvim_set_hl(0, "NormalFloat", {
+    bg = "NONE", -- or "NONE"
+})
+
+vim.api.nvim_set_hl(0, "FloatBorder", {
+    fg = "#878787",
+    bg = "NONE",
+})
+
+require("fzf-lua").setup({
+    winopts = {
+        -- fullscreen = true
+        border = "single",
+        backdrop = 100,
+        hls = {
+            border = "FzfLuaBorder"
+        },
+        preview = {
+            border = "single"
+        }
+    }
+})
 
 vim.keymap.set("n", "<leader>sf", function()
 	require("fzf-lua").files()
@@ -263,7 +293,6 @@ require("mini.cursorword").setup()
 require("mini.pairs").setup()
 require("mini.trailspace").setup()
 require("mini.bufremove").setup()
-require("mini.notify").setup()
 require("mini.icons").setup()
 require("mini.tabline").setup()
 require("mini.surround").setup()
@@ -483,6 +512,7 @@ vim.api.nvim_create_autocmd("LspAttach", { group = augroup, callback = lsp_on_at
 vim.keymap.set("n", "<leader>q", function()
 	vim.diagnostic.setloclist({ open = true })
 end, { desc = "Open diagnostic list" })
+
 vim.keymap.set("n", "<leader>dl", vim.diagnostic.open_float, { desc = "Show line diagnostics" })
 
 require("blink.cmp").setup({
@@ -490,11 +520,14 @@ require("blink.cmp").setup({
 		preset = "super-tab",
 	},
 	appearance = { nerd_font_variant = "mono" },
-	completion = { menu = { auto_show = true } },
+	completion = {
+        menu = { auto_show = true },
+    },
 	sources = { default = { "lsp", "path", "buffer", "snippets" } },
 	snippets = {
 		expand = function(snippet)
 			require("luasnip").lsp_expand(snippet)
+            -- vim.snippet.expand(snippet)
 		end,
 	},
 
@@ -521,6 +554,17 @@ vim.lsp.config("bashls", {})
 vim.lsp.config("ts_ls", {})
 vim.lsp.config("gopls", {})
 vim.lsp.config("clangd", {})
+vim.lsp.config("rust_analyzer", {
+    settings = {
+        ["rust-analyzer"] = {
+            completion = {
+                callable = {
+                    snippets = "none", -- This is the magic line
+                },
+            },
+        },
+    },
+})
 
 do
 	local luacheck = require("efmls-configs.linters.luacheck")
@@ -543,6 +587,8 @@ do
 	local go_revive = require("efmls-configs.linters.go_revive")
 	local gofumpt = require("efmls-configs.formatters.gofumpt")
 
+    local rustfmt = require("efmls-configs.formatters.rustfmt")
+
 	vim.lsp.config("efm", {
 		filetypes = {
 			"c",
@@ -562,6 +608,7 @@ do
 			"typescriptreact",
 			"vue",
 			"svelte",
+            "rs"
 		},
 		init_options = { documentFormatting = true },
 		settings = {
@@ -583,6 +630,7 @@ do
 				typescriptreact = { eslint_d, prettier_d },
 				vue = { eslint_d, prettier_d },
 				svelte = { eslint_d, prettier_d },
+                rust_analyzer = { rustfmt }
 			},
 		},
 	})
@@ -595,6 +643,7 @@ vim.lsp.enable({
 	"ts_ls",
 	"gopls",
 	"clangd",
-	"efm",
+    "rust_analyzer",
+	"efm"
 })
 
